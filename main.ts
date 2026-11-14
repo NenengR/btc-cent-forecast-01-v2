@@ -75,7 +75,12 @@ function forecast(market: CaseMarket): number {
   const last = prices[prices.length - 1] as number;
   const base = median(prices.slice(-MEDIAN_K));
   let guess = base;
-  if (prices.length > TREND_LAG) {
+  if (base <= 0) {
+    // A non-positive median can only come from corrupt data (zero or
+    // negative closes in the window); fall back to the last close rather
+    // than forecasting from a degenerate base.
+    guess = last;
+  } else if (prices.length > TREND_LAG) {
     const old = prices[prices.length - 1 - TREND_LAG] as number;
     if (old > 0 && last > 0) {
       guess = base * Math.exp(TREND_WEIGHT * Math.log(last / old));
